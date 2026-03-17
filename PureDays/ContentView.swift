@@ -18,6 +18,9 @@ struct ContentView: View {
     // UI 状态
     @State private var isPresentingAddSheet = false
 
+    // 左滑删除确认弹窗：记录待删除的事件
+    @State private var pendingDeleteEvent: Event?
+
     // Bento Grid：自适应列数，让卡片在不同尺寸下自动排布
     private let columns = [
         GridItem(.adaptive(minimum: 160, maximum: 220), spacing: 16)
@@ -101,6 +104,27 @@ struct ContentView: View {
                     modelContext.insert(newEvent)
                 }
             }
+            .alert(
+                "删除纪念日",
+                isPresented: Binding(
+                    get: { pendingDeleteEvent != nil },
+                    set: { if !$0 { pendingDeleteEvent = nil } }
+                )
+            ) {
+                Button("取消", role: .cancel) {
+                    pendingDeleteEvent = nil
+                }
+                Button("删除", role: .destructive) {
+                    if let event = pendingDeleteEvent {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                            modelContext.delete(event)
+                        }
+                    }
+                    pendingDeleteEvent = nil
+                }
+            } message: {
+                Text("确定删除\(pendingDeleteEvent.map { "「\($0.name)」" } ?? "")吗？")
+            }
         }
     }
 
@@ -124,54 +148,24 @@ struct ContentView: View {
         let text = DateUtils.countdownText(targetDate: event.date)
         let delta = DateUtils.dayDifference(from: Date(), to: event.date)
 
-        return Button {
-            // 预留点击行为（未来可以跳转详情）
-        } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                // 标题：SF Pro Rounded 风格
-                Text(event.name)
-                    .font(.system(.headline, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-
-                // 日期行
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    Text(formatted(date: event.date))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: 0)
-
-                // 天数与标签
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    // 数字部分：粗体 + 大字号 + 动画
-                    Text(numberPart(from: text))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(isFuture ? coralPink : .primary)
-                        .monospacedDigit()
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: delta)
-
-                    // 单位 + 前缀
-                    Text(prefixPart(from: text) + "天")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
+        return SwipeToRevealDeleteCard(
+            title: event.name,
+            subtitle: formatted(date: event.date),
+            numberText: numberPart(from: text),
+            suffixText: prefixPart(from: text) + "天",
+            accentColor: isFuture ? coralPink : .primary,
+            background: cardBackground(isFuture: isFuture),
+            deltaAnimationKey: delta,
+            onTap: {
+                // 点击行为（保留：后续可跳详情页）
+            },
+            onRequestDelete: {
+                pendingDeleteEvent = event
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
-            .background(cardBackground(isFuture: isFuture))
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 6)
-        }
-        .buttonStyle(PressableCardStyle())
+        )
         .contextMenu {
             Button(role: .destructive) {
-                modelContext.delete(event)
+                pendingDeleteEvent = event
             } label: {
                 Label("删除纪念日", systemImage: "trash")
             }
@@ -182,14 +176,20 @@ struct ContentView: View {
     private func cardBackground(isFuture: Bool) -> some View {
         Group {
             if isFuture {
-                LinearGradient(
-                    colors: [
-                        coralPink.opacity(0.14),
-                        mintGreen.opacity(0.10)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                // 关键修复：
+                // 之前渐变使用了较低透明度，导致在“未滑动”时也能隐约看到后面的红色删除底板。
+                // 这里先铺一层不透明底色，再叠加柔和渐变，从而保证卡片本体始终不透底。
+                ZStack {
+                    Color(.secondarySystemBackground)
+                    LinearGradient(
+                        colors: [
+                            coralPink.opacity(0.18),
+                            mintGreen.opacity(0.14)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
             } else {
                 Color(.secondarySystemBackground)
             }
@@ -287,14 +287,153 @@ struct ContentView: View {
     }
 }
 
-// MARK: - 按压卡片按钮样式
+// MARK: - 按压卡片效果（不抢滑动手势）
 
-/// 为卡片添加按压缩放效果的按钮样式
-struct PressableCardStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: configuration.isPressed)
+/// 为卡片添加“按下缩放”的微交互，但不使用 DragGesture（避免影响 swipeActions）
+private struct PressableCardModifier: ViewModifier {
+    @GestureState private var isPressed: Bool = false
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isPressed)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.01, maximumDistance: 12)
+                    .updating($isPressed) { value, state, _ in
+                        state = value
+                    }
+            )
+    }
+}
+
+// MARK: - 自实现左滑删除（适配 ScrollView + LazyVGrid）
+
+/// 在 `ScrollView + LazyVGrid` 中，系统 `.swipeActions` 经常无法稳定触发。
+/// 这里做一个轻量自实现：左滑露出删除按钮，右滑/点击收回。
+///
+/// 关键点（对应你提到的内容）：
+/// - `.contentShape(Rectangle())`：让整个卡片区域都可命中手势
+/// - 手势优先级：用自定义 `DragGesture`，仅在“横向位移 > 纵向位移”时处理，避免抢 ScrollView 的竖向滚动
+private struct SwipeToRevealDeleteCard<Background: View>: View {
+    let title: String
+    let subtitle: String
+    let numberText: String
+    let suffixText: String
+    let accentColor: Color
+    let background: Background
+    let deltaAnimationKey: Int
+    let onTap: () -> Void
+    let onRequestDelete: () -> Void
+
+    private let cornerRadius: CGFloat = 20
+    private let deleteWidth: CGFloat = 92
+    private let minSwipeToOpen: CGFloat = 44
+
+    @State private var baseOffsetX: CGFloat = 0
+    @GestureState private var dragX: CGFloat = 0
+
+    private var totalOffsetX: CGFloat {
+        clamp(baseOffsetX + dragX, min: -deleteWidth, max: 0)
+    }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            // 右侧删除底板
+            Button(role: .destructive) {
+                onRequestDelete()
+            } label: {
+                VStack(spacing: 6) {
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                    Text("删除")
+                        .font(.system(.subheadline, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .frame(width: deleteWidth, height: 130)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .background(Color.red)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+            // 卡片本体（可滑动）
+            cardBody
+                .offset(x: totalOffsetX)
+                .animation(.spring(response: 0.25, dampingFraction: 0.86), value: baseOffsetX)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+    }
+
+    private var cardBody: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+
+            HStack(spacing: 6) {
+                Image(systemName: "calendar")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(numberText)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(accentColor)
+                    .monospacedDigit()
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: deltaAnimationKey)
+
+                Text(suffixText)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
+        .background(background)
+        .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // 如果已经露出删除按钮，优先收回；否则触发点击
+            if baseOffsetX != 0 {
+                baseOffsetX = 0
+            } else {
+                onTap()
+            }
+        }
+        .modifier(PressableCardModifier())
+        .simultaneousGesture(horizontalSwipeGesture)
+    }
+
+    private var horizontalSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .local)
+            .updating($dragX) { value, state, _ in
+                // 只在横向位移明显大于纵向位移时才处理（不抢竖向滚动）
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                state = value.translation.width
+            }
+            .onEnded { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
+                if value.translation.width <= -minSwipeToOpen {
+                    baseOffsetX = -deleteWidth
+                } else if value.translation.width >= minSwipeToOpen {
+                    baseOffsetX = 0
+                } else {
+                    baseOffsetX = (abs(baseOffsetX) > deleteWidth / 2) ? -deleteWidth : 0
+                }
+            }
+    }
+
+    private func clamp(_ x: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+        Swift.min(Swift.max(x, min), max)
     }
 }
 
