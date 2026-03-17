@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		35A379462F68FA04004160D4 /* PureDaysApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A379452F68FA04004160D4 /* PureDaysApp.swift */; };
-		35A379482F68FA04004160D4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A379472F68FA04004160D4 /* ContentView.swift */; };
-		35A3794A2F68FA08004160D4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35A379492F68FA08004160D4 /* Assets.xcassets */; };
-		35A3794D2F68FA08004160D4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35A3794C2F68FA08004160D4 /* Preview Assets.xcassets */; };
-		35A379572F68FA09004160D4 /* PureDaysTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A379562F68FA09004160D4 /* PureDaysTests.swift */; };
-		35A379612F68FA09004160D4 /* PureDaysUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A379602F68FA09004160D4 /* PureDaysUITests.swift */; };
-		35A379632F68FA09004160D4 /* PureDaysUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35A379622F68FA09004160D4 /* PureDaysUITestsLaunchTests.swift */; };
+		355D12CC2F69025A00FF3641 /* AddEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12CA2F69025A00FF3641 /* AddEventView.swift */; };
+		355D12CD2F69025A00FF3641 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12CB2F69025A00FF3641 /* Event.swift */; };
+		355D12D32F6902EF00FF3641 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12CE2F6902EF00FF3641 /* ContentView.swift */; };
+		355D12D42F6902EF00FF3641 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 355D12CF2F6902EF00FF3641 /* Assets.xcassets */; };
+		355D12D52F6902EF00FF3641 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */; };
+		355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D22F6902EF00FF3641 /* PureDaysApp.swift */; };
+		355D12D82F69055100FF3641 /* DateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D72F69055100FF3641 /* DateUtils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,16 +34,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		355D12CA2F69025A00FF3641 /* AddEventView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AddEventView.swift; path = PureDays/AddEventView.swift; sourceTree = "<group>"; };
+		355D12CB2F69025A00FF3641 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Event.swift; path = PureDays/Event.swift; sourceTree = "<group>"; };
+		355D12CE2F6902EF00FF3641 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = PureDays/ContentView.swift; sourceTree = "<group>"; };
+		355D12CF2F6902EF00FF3641 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = PureDays/Assets.xcassets; sourceTree = "<group>"; };
+		355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		355D12D22F6902EF00FF3641 /* PureDaysApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PureDaysApp.swift; path = PureDays/PureDaysApp.swift; sourceTree = "<group>"; };
+		355D12D72F69055100FF3641 /* DateUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DateUtils.swift; path = PureDays/DateUtils.swift; sourceTree = "<group>"; };
 		35A379422F68FA04004160D4 /* PureDays.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PureDays.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		35A379452F68FA04004160D4 /* PureDaysApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureDaysApp.swift; sourceTree = "<group>"; };
-		35A379472F68FA04004160D4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		35A379492F68FA08004160D4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		35A3794C2F68FA08004160D4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		35A379522F68FA09004160D4 /* PureDaysTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PureDaysTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		35A379562F68FA09004160D4 /* PureDaysTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureDaysTests.swift; sourceTree = "<group>"; };
 		35A3795C2F68FA09004160D4 /* PureDaysUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PureDaysUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		35A379602F68FA09004160D4 /* PureDaysUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureDaysUITests.swift; sourceTree = "<group>"; };
-		35A379622F68FA09004160D4 /* PureDaysUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureDaysUITestsLaunchTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,12 +71,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		355D12D12F6902EF00FF3641 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */,
+			);
+			name = "Preview Content";
+			path = "PureDays/Preview Content";
+			sourceTree = "<group>";
+		};
 		35A379392F68FA04004160D4 = {
 			isa = PBXGroup;
 			children = (
 				35A379442F68FA04004160D4 /* PureDays */,
-				35A379552F68FA09004160D4 /* PureDaysTests */,
-				35A3795F2F68FA09004160D4 /* PureDaysUITests */,
 				35A379432F68FA04004160D4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -94,38 +101,17 @@
 		35A379442F68FA04004160D4 /* PureDays */ = {
 			isa = PBXGroup;
 			children = (
-				35A379452F68FA04004160D4 /* PureDaysApp.swift */,
-				35A379472F68FA04004160D4 /* ContentView.swift */,
-				35A379492F68FA08004160D4 /* Assets.xcassets */,
-				35A3794B2F68FA08004160D4 /* Preview Content */,
+				355D12D72F69055100FF3641 /* DateUtils.swift */,
+				355D12CA2F69025A00FF3641 /* AddEventView.swift */,
+				355D12CB2F69025A00FF3641 /* Event.swift */,
+				355D12CF2F6902EF00FF3641 /* Assets.xcassets */,
+				355D12CE2F6902EF00FF3641 /* ContentView.swift */,
+				355D12D12F6902EF00FF3641 /* Preview Content */,
+				355D12D22F6902EF00FF3641 /* PureDaysApp.swift */,
 			);
-			path = PureDays;
+			name = PureDays;
 			sourceTree = "<group>";
-		};
-		35A3794B2F68FA08004160D4 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				35A3794C2F68FA08004160D4 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		35A379552F68FA09004160D4 /* PureDaysTests */ = {
-			isa = PBXGroup;
-			children = (
-				35A379562F68FA09004160D4 /* PureDaysTests.swift */,
-			);
-			path = PureDaysTests;
-			sourceTree = "<group>";
-		};
-		35A3795F2F68FA09004160D4 /* PureDaysUITests */ = {
-			isa = PBXGroup;
-			children = (
-				35A379602F68FA09004160D4 /* PureDaysUITests.swift */,
-				35A379622F68FA09004160D4 /* PureDaysUITestsLaunchTests.swift */,
-			);
-			path = PureDaysUITests;
-			sourceTree = "<group>";
+			usesTabs = 0;
 		};
 /* End PBXGroup section */
 
@@ -231,8 +217,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35A3794D2F68FA08004160D4 /* Preview Assets.xcassets in Resources */,
-				35A3794A2F68FA08004160D4 /* Assets.xcassets in Resources */,
+				355D12D52F6902EF00FF3641 /* Preview Assets.xcassets in Resources */,
+				355D12D42F6902EF00FF3641 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,8 +243,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35A379482F68FA04004160D4 /* ContentView.swift in Sources */,
-				35A379462F68FA04004160D4 /* PureDaysApp.swift in Sources */,
+				355D12CD2F69025A00FF3641 /* Event.swift in Sources */,
+				355D12D32F6902EF00FF3641 /* ContentView.swift in Sources */,
+				355D12D82F69055100FF3641 /* DateUtils.swift in Sources */,
+				355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */,
+				355D12CC2F69025A00FF3641 /* AddEventView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,7 +255,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35A379572F68FA09004160D4 /* PureDaysTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,8 +262,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				35A379632F68FA09004160D4 /* PureDaysUITestsLaunchTests.swift in Sources */,
-				35A379612F68FA09004160D4 /* PureDaysUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

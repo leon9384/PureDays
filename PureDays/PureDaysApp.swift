@@ -1,17 +1,13 @@
-//
-//  PureDaysApp.swift
-//  PureDays
-//
-//  Created by 李成龙 on 2026/3/17.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct PureDaysApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // 为整个 App 提供 SwiftData 容器（iOS 17+）
+                .modelContainer(for: Event.self)
         }
     }
 }
