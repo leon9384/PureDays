@@ -1,0 +1,24 @@
+//
+//  ContentView.swift
+//  PureDays
+//
+//  Created by 李成龙 on 2026/3/17.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        VStack {
+            Image(systemName: "globe")
+                .imageScale(.large)
+                .foregroundStyle(.tint)
+            Text("Hello, world!")
+        }
+        .padding()
+    }
+}
+
+#Preview {
+    ContentView()
+}
