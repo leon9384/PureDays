@@ -17,6 +17,7 @@ struct ContentView: View {
 
     // UI 状态
     @State private var isPresentingAddSheet = false
+    @State private var path = NavigationPath()
 
     // 左滑删除确认弹窗：记录待删除的事件
     @State private var pendingDeleteEvent: Event?
@@ -49,7 +50,7 @@ struct ContentView: View {
 
     // MARK: - Body
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 // 背景：淡淡的系统分组背景，提升“卡片”层级感
                 Color(.systemGroupedBackground)
@@ -125,6 +126,9 @@ struct ContentView: View {
             } message: {
                 Text("确定删除\(pendingDeleteEvent.map { "「\($0.name)」" } ?? "")吗？")
             }
+            .navigationDestination(for: PersistentIdentifier.self) { id in
+                EventDetailView(eventID: id)
+            }
         }
     }
 
@@ -157,7 +161,8 @@ struct ContentView: View {
             background: cardBackground(isFuture: isFuture),
             deltaAnimationKey: delta,
             onTap: {
-                // 点击行为（保留：后续可跳详情页）
+                // 点击跳转详情页（保持现有卡片交互：若卡片已露出删除按钮，卡片内部会优先收回）
+                path.append(event.persistentModelID)
             },
             onRequestDelete: {
                 pendingDeleteEvent = event

@@ -14,6 +14,7 @@
 		355D12D52F6902EF00FF3641 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */; };
 		355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D22F6902EF00FF3641 /* PureDaysApp.swift */; };
 		355D12D82F69055100FF3641 /* DateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D72F69055100FF3641 /* DateUtils.swift */; };
+		35B7F1882F693CCD00513084 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B7F1872F693CCD00513084 /* EventDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 		355D12D22F6902EF00FF3641 /* PureDaysApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PureDaysApp.swift; path = PureDays/PureDaysApp.swift; sourceTree = "<group>"; };
 		355D12D72F69055100FF3641 /* DateUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DateUtils.swift; path = PureDays/DateUtils.swift; sourceTree = "<group>"; };
 		35A379422F68FA04004160D4 /* PureDays.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PureDays.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		35B7F1872F693CCD00513084 /* EventDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventDetailView.swift; path = PureDays/EventDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 		35A379442F68FA04004160D4 /* PureDays */ = {
 			isa = PBXGroup;
 			children = (
+				35B7F1872F693CCD00513084 /* EventDetailView.swift */,
 				355D12D72F69055100FF3641 /* DateUtils.swift */,
 				355D12CA2F69025A00FF3641 /* AddEventView.swift */,
 				355D12CB2F69025A00FF3641 /* Event.swift */,
@@ -150,6 +153,7 @@
 			files = (
 				355D12CD2F69025A00FF3641 /* Event.swift in Sources */,
 				355D12D32F6902EF00FF3641 /* ContentView.swift in Sources */,
+				35B7F1882F693CCD00513084 /* EventDetailView.swift in Sources */,
 				355D12D82F69055100FF3641 /* DateUtils.swift in Sources */,
 				355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */,
 				355D12CC2F69025A00FF3641 /* AddEventView.swift in Sources */,
