@@ -31,21 +31,25 @@ struct ContentView: View {
     private let coralPink = Color(red: 1.0, green: 0.42, blue: 0.42)      // #FF6B6B
     private let mintGreen = Color(red: 0.31, green: 0.80, blue: 0.77)     // #4ECDC4
 
-    // MARK: - 分组：未来 / 已过
-    private var todayStart: Date {
-        DateUtils.startOfToday()
-    }
+    // MARK: - 分区与排序（新规则）
 
-    private var futureItems: [Event] {
-        events
-            .filter { DateUtils.startOfDay($0.date) >= todayStart }
-            .sorted { $0.date < $1.date }
+    /// 即将到来：有下一次发生日期的所有事件
+    private var upcomingItems: [Event] {
+        events.filter { DateUtils.nextOccurrence(for: $0) != nil }
+            .sorted { event1, event2 in
+                let date1 = DateUtils.nextOccurrence(for: event1) ?? Date.distantFuture
+                let date2 = DateUtils.nextOccurrence(for: event2) ?? Date.distantFuture
+                return date1 < date2
+            }
     }
-
+    
+    /// 已过记录：一次性事件且已过（没有下一次）
     private var pastItems: [Event] {
-        events
-            .filter { DateUtils.startOfDay($0.date) < todayStart }
-            .sorted { $0.date > $1.date }
+        events.filter {
+            $0.isOneTime && DateUtils.nextOccurrence(for: $0) == nil
+        }.sorted { event1, event2 in
+            DateUtils.totalDays(for: event1) > DateUtils.totalDays(for: event2)
+        }
     }
 
     // MARK: - Body
@@ -56,23 +60,25 @@ struct ContentView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
-                if events.isEmpty {
-                    emptyState
+                if upcomingItems.isEmpty && pastItems.isEmpty {
+                    EmptyStateView(onAdd: {
+                        isPresentingAddSheet = true
+                    })
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 24) {
-                            if !futureItems.isEmpty {
-                                sectionHeader(title: "未来纪念日", color: coralPink)
+                            if !upcomingItems.isEmpty {
+                                sectionHeader(title: "即将到来", count: upcomingItems.count, tint: coralPink)
 
                                 LazyVGrid(columns: columns, spacing: 16) {
-                                    ForEach(futureItems) { event in
+                                    ForEach(upcomingItems) { event in
                                         card(for: event, isFuture: true)
                                     }
                                 }
                             }
 
                             if !pastItems.isEmpty {
-                                sectionHeader(title: "已过纪念日", color: .secondary)
+                                sectionHeader(title: "已过记录", count: pastItems.count, tint: .secondary)
 
                                 LazyVGrid(columns: columns, spacing: 16) {
                                     ForEach(pastItems) { event in
@@ -100,10 +106,9 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $isPresentingAddSheet) {
-                AddEventView { name, date, isLunar in
-                    let newEvent = Event(name: name, date: date, isLunar: isLunar)
+                AddEventView(onSaveEvent: { newEvent in
                     modelContext.insert(newEvent)
-                }
+                })
             }
             .alert(
                 "删除纪念日",
@@ -133,33 +138,35 @@ struct ContentView: View {
     }
 
     // MARK: - Section Header
-    private func sectionHeader(title: String, color: Color) -> some View {
-        HStack(spacing: 8) {
+    private func sectionHeader(title: String, count: Int, tint: Color) -> some View {
+        HStack(alignment: .center, spacing: 10) {
             Circle()
-                .fill(color.opacity(0.7))
+                .fill(tint.opacity(0.75))
                 .frame(width: 8, height: 8)
 
             Text(title)
                 .font(.system(.headline, design: .rounded))
+                .foregroundStyle(Color.primary.opacity(0.9))
+
+            Spacer()
+
+            Text("\(count)")
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(Capsule())
         }
-        .padding(.leading, 4)
+        .padding(.horizontal, 6)
     }
 
     // MARK: - 卡片视图（Bento Grid Cell）
     private func card(for event: Event, isFuture: Bool) -> some View {
-        // 天数差 & 文案
-        let text = DateUtils.countdownText(targetDate: event.date)
-        let delta = DateUtils.dayDifference(from: Date(), to: event.date)
-
         return SwipeToRevealDeleteCard(
-            title: event.name,
-            subtitle: formatted(date: event.date),
-            numberText: numberPart(from: text),
-            suffixText: prefixPart(from: text) + "天",
-            accentColor: isFuture ? coralPink : .primary,
-            background: cardBackground(isFuture: isFuture),
-            deltaAnimationKey: delta,
+            content: {
+                EventCard(event: event, isFutureSection: isFuture)
+            },
             onTap: {
                 // 点击跳转详情页（保持现有卡片交互：若卡片已露出删除按钮，卡片内部会优先收回）
                 path.append(event.persistentModelID)
@@ -177,119 +184,10 @@ struct ContentView: View {
         }
     }
 
-    /// 卡片背景：未来使用浅粉色渐变，过去使用浅灰色
-    private func cardBackground(isFuture: Bool) -> some View {
-        Group {
-            if isFuture {
-                // 关键修复：
-                // 之前渐变使用了较低透明度，导致在“未滑动”时也能隐约看到后面的红色删除底板。
-                // 这里先铺一层不透明底色，再叠加柔和渐变，从而保证卡片本体始终不透底。
-                ZStack {
-                    Color(.secondarySystemBackground)
-                    LinearGradient(
-                        colors: [
-                            coralPink.opacity(0.18),
-                            mintGreen.opacity(0.14)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            } else {
-                Color(.secondarySystemBackground)
-            }
-        }
-    }
-
-    // MARK: - 空状态
-    private var emptyState: some View {
-        VStack(spacing: 24) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                coralPink.opacity(0.18),
-                                mintGreen.opacity(0.14)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 220, height: 180)
-
-                VStack(spacing: 12) {
-                    Image(systemName: "heart.circle.fill")
-                        .font(.system(size: 52))
-                        .foregroundStyle(.white)
-
-                    Text("记录你的每一个重要日子")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-                }
-            }
-
-            VStack(spacing: 8) {
-                Text("还没有纪念日")
-                    .font(.system(.title3, design: .rounded))
-
-                Text("添加第一个纪念日，让重要的日子不再被时间淹没。")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-
-            Button {
-                isPresentingAddSheet = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
-                    Text("添加第一个纪念日")
-                }
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 10)
-                .background(coralPink)
-                .clipShape(Capsule())
-                .shadow(color: coralPink.opacity(0.4), radius: 10, x: 0, y: 6)
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
+    // 卡片背景已下沉到 `EventCard.swift`
 
     // MARK: - 文本工具
-
-    /// 将日期格式化为 yyyy-MM-dd
-    private func formatted(date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = .current
-        formatter.calendar = .current
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
-
-    /// 从完整文案中提取前缀（“倒计时 ” / “已过 ”）
-    private func prefixPart(from text: String) -> String {
-        // 文案格式由 DateUtils.countdownText 决定，这里做一个简单拆分：
-        // "倒计时 X天" / "已过 X天"
-        if text.hasPrefix("倒计时") {
-            return "倒计时 "
-        } else if text.hasPrefix("已过") {
-            return "已过 "
-        } else {
-            return ""
-        }
-    }
-
-    /// 从完整文案中提取数字部分（用于大号数字显示）
-    private func numberPart(from text: String) -> String {
-        // 简单从文案中提取所有数字字符
-        let digits = text.filter { $0.isNumber }
-        return digits.isEmpty ? "0" : digits
-    }
+    // 已迁移到 `EventCard.swift` 与 `DateUtils.display(...)`
 }
 
 // MARK: - 按压卡片效果（不抢滑动手势）
@@ -319,14 +217,9 @@ private struct PressableCardModifier: ViewModifier {
 /// 关键点（对应你提到的内容）：
 /// - `.contentShape(Rectangle())`：让整个卡片区域都可命中手势
 /// - 手势优先级：用自定义 `DragGesture`，仅在“横向位移 > 纵向位移”时处理，避免抢 ScrollView 的竖向滚动
-private struct SwipeToRevealDeleteCard<Background: View>: View {
-    let title: String
-    let subtitle: String
-    let numberText: String
-    let suffixText: String
-    let accentColor: Color
-    let background: Background
-    let deltaAnimationKey: Int
+private struct SwipeToRevealDeleteCard<Content: View>: View {
+    /// 卡片内容（保持 Bento Grid 视觉语言由外部决定，例如 `EventCard`）
+    @ViewBuilder let content: () -> Content
     let onTap: () -> Void
     let onRequestDelete: () -> Void
 
@@ -370,41 +263,9 @@ private struct SwipeToRevealDeleteCard<Background: View>: View {
     }
 
     private var cardBody: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-
-            HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer(minLength: 0)
-
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(numberText)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(accentColor)
-                    .monospacedDigit()
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: deltaAnimationKey)
-
-                Text(suffixText)
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
-        .background(background)
-        .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 6)
-        .contentShape(Rectangle())
+        content()
+            // 关键：让整个卡片区域都可命中手势（不止文字部分）
+            .contentShape(Rectangle())
         .onTapGesture {
             // 如果已经露出删除按钮，优先收回；否则触发点击
             if baseOffsetX != 0 {

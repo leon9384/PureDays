@@ -71,6 +71,7 @@ struct EventDetailView: View {
 
 private struct EventDetailContent: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
 
     // `@Bindable` 用于直接双向绑定 SwiftData 模型字段（iOS 17+）
     @Bindable var event: Event
@@ -78,26 +79,53 @@ private struct EventDetailContent: View {
     let onDelete: () -> Void
     let onSave: () -> Void
 
-    // 农历开关（Event.isLunar 是可选 Bool，这里用 computed Binding 适配 UI）
-    private var isLunarBinding: Binding<Bool> {
-        Binding(
-            get: { event.isLunar ?? false },
-            set: { event.isLunar = $0 }
+    // MARK: - Draft（草稿）
+    //
+    // 需求：修改实时生效（UI 预览实时变化），但“返回前可以取消”
+    // 做法：页面上编辑的是草稿 State；只有点击“保存”才写回 `event` 并持久化。
+    @State private var draftName: String = ""
+    @State private var draftDate: Date = Date()
+    @State private var draftIsLunar: Bool = false
+    @State private var draftIsOneTime: Bool = false
+    @State private var draftColor: String = "FF6B6B"
+    @State private var draftIcon: String = "star.fill"
+    @State private var draftNotes: String = ""
+    @State private var didLoadDraft = false
+
+    // DatePicker 使用的日历（跟随草稿开关）
+    private var activeCalendar: Calendar {
+        draftIsLunar ? Calendar(identifier: .chinese) : Calendar.current
+    }
+
+    // 统计信息（用草稿构造一个“临时 Event”来计算，保证 UI 预览实时变化）
+    private var previewEvent: Event {
+        Event(
+            name: draftName.isEmpty ? event.name : draftName,
+            date: DateUtils.startOfDay(draftDate),
+            isLunar: draftIsLunar,
+            isRecurring: !draftIsOneTime, // 兼容旧字段：非一次性视为可重复
+            isOneTime: draftIsOneTime,
+            categoryColor: normalizeHex(draftColor),
+            categoryIcon: draftIcon,
+            notes: draftNotes,
+            createdAt: event.createdAt
         )
     }
 
-    // DatePicker 使用的日历
-    private var activeCalendar: Calendar {
-        (event.isLunar ?? false) ? Calendar(identifier: .chinese) : Calendar.current
+    private var statsTotalDays: Int {
+        DateUtils.totalDays(for: previewEvent)
     }
 
-    // 显示文案
-    private var countdownText: String {
-        DateUtils.countdownText(targetDate: event.date)
+    private var statsNextDate: Date? {
+        DateUtils.nextOccurrence(for: previewEvent)
     }
 
-    private var delta: Int {
-        DateUtils.dayDifference(from: Date(), to: event.date)
+    private var statsCountdownText: String? {
+        DateUtils.displayText(for: previewEvent).countdown
+    }
+
+    private var statsTotalText: String {
+        DateUtils.displayText(for: previewEvent).total
     }
 
     // 颜色：沿用首页主色/辅助色
@@ -120,46 +148,49 @@ private struct EventDetailContent: View {
             .padding(.vertical, 20)
         }
         .background(Color(.systemGroupedBackground))
+        .onAppear {
+            // 初始化草稿（只做一次）
+            guard !didLoadDraft else { return }
+            didLoadDraft = true
+
+            draftName = event.name
+            draftDate = event.date
+            draftIsLunar = event.isLunar
+            draftIsOneTime = event.isOneTime
+            draftIcon = event.categoryIcon
+            draftNotes = event.notes
+            draftColor = stripHash(event.categoryColor).isEmpty ? "FF6B6B" : stripHash(event.categoryColor)
+        }
     }
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("当前状态")
+            Text("统计信息")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.secondary)
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(numberOnly(from: countdownText))
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(delta >= 0 ? coralPink : .primary)
-                    .monospacedDigit()
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: delta)
+            // 倒计时（如果有）
+            if let c = statsCountdownText {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(numberOnly(from: c))
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundStyle(coralPink)
+                        .monospacedDigit()
 
-                Text(labelOnly(from: countdownText))
-                    .font(.system(.title3, design: .rounded))
-                    .foregroundStyle(.secondary)
+                    Text("倒计时 天")
+                        .font(.system(.title3, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Divider().opacity(0.6)
 
-            HStack(spacing: 8) {
-                Image(systemName: "calendar")
-                    .foregroundStyle(.secondary)
-
-                Text(formatted(date: event.date))
-                    .font(.system(.headline, design: .rounded))
-
-                Spacer()
-
-                if event.isLunar == true {
-                    Text("农历")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(mintGreen.opacity(0.18))
-                        .foregroundStyle(mintGreen)
-                        .clipShape(Capsule())
+            VStack(alignment: .leading, spacing: 8) {
+                statRow(title: "总天数", value: "\(formattedNumber(statsTotalDays)) 天")
+                if let next = statsNextDate, draftIsOneTime == false {
+                    statRow(title: "下次日期", value: formatted(date: next))
                 }
+                statRow(title: "状态", value: statsTotalText)
             }
         }
         .padding(16)
@@ -188,11 +219,25 @@ private struct EventDetailContent: View {
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("一次性事件")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Toggle("一次性事件", isOn: $draftIsOneTime)
+                        .labelsHidden()
+                }
+                Text(draftIsOneTime ? "一次性：只显示已过总天数，不计算下一次发生日。" : "非一次性：会计算下一次发生日并显示倒计时。")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
                 Text("名称")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.secondary)
 
-                TextField("请输入事件名称", text: $event.name)
+                TextField("请输入事件名称", text: $draftName)
                     .textInputAutocapitalization(.sentences)
                     .padding(12)
                     .background(Color(.systemBackground))
@@ -207,16 +252,13 @@ private struct EventDetailContent: View {
 
                     Spacer()
 
-                    Toggle("农历", isOn: isLunarBinding)
+                    Toggle("农历", isOn: $draftIsLunar)
                         .labelsHidden()
                 }
 
                 DatePicker(
                     "选择日期",
-                    selection: Binding(
-                        get: { event.date },
-                        set: { event.date = DateUtils.startOfDay($0) }
-                    ),
+                    selection: $draftDate,
                     displayedComponents: [.date]
                 )
                 .datePickerStyle(.compact)
@@ -224,6 +266,27 @@ private struct EventDetailContent: View {
                 .padding(12)
                 .background(Color(.systemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("分类")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                CategoryColorPicker(selectedHex: $draftColor)
+                CategoryIconPicker(selectedIcon: $draftIcon)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("备注")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(.secondary)
+
+                TextField("可选，记录一些小细节…", text: $draftNotes, axis: .vertical)
+                    .lineLimit(2...6)
+                    .padding(12)
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
         }
         .padding(16)
@@ -236,8 +299,10 @@ private struct EventDetailContent: View {
     private var actionCard: some View {
         VStack(spacing: 12) {
             Button {
-                // 显式保存（同时仍能依赖 SwiftData 自动持久化）
+                // 保存：把草稿写回模型，再持久化，然后返回首页
+                applyDraftToEvent()
                 onSave()
+                dismiss()
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
@@ -262,7 +327,7 @@ private struct EventDetailContent: View {
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(Color.red.opacity(0.12))
+                .background(Color.red.opacity(0.14))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -289,11 +354,45 @@ private struct EventDetailContent: View {
         return digits.isEmpty ? "0" : digits
     }
 
-    private func labelOnly(from text: String) -> String {
-        // "倒计时 12天" -> "倒计时 天"
-        if text.hasPrefix("倒计时") { return "倒计时 天" }
-        if text.hasPrefix("已过") { return "已过 天" }
-        return "天"
+    private func formattedNumber(_ value: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private func statRow(title: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        }
+    }
+
+    private func stripHash(_ s: String) -> String {
+        s.replacingOccurrences(of: "#", with: "")
+    }
+
+    private func normalizeHex(_ s: String) -> String {
+        let cleaned = stripHash(s).uppercased()
+        return cleaned.hasPrefix("#") ? cleaned : "#\(cleaned)"
+    }
+
+    private func applyDraftToEvent() {
+        let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            event.name = trimmed
+        }
+
+        event.date = DateUtils.startOfDay(draftDate)
+        event.isLunar = draftIsLunar
+        event.isOneTime = draftIsOneTime
+        event.isRecurring = !draftIsOneTime
+        event.categoryColor = normalizeHex(draftColor)
+        event.categoryIcon = draftIcon
+        event.notes = draftNotes
     }
 }
 

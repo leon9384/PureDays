@@ -14,7 +14,11 @@
 		355D12D52F6902EF00FF3641 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */; };
 		355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D22F6902EF00FF3641 /* PureDaysApp.swift */; };
 		355D12D82F69055100FF3641 /* DateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355D12D72F69055100FF3641 /* DateUtils.swift */; };
+		358C52882F695DEC00A50AB8 /* CategoryColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358C52852F695DEC00A50AB8 /* CategoryColorPicker.swift */; };
+		358C52892F695DEC00A50AB8 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358C52862F695DEC00A50AB8 /* EmptyStateView.swift */; };
+		358C528A2F695DEC00A50AB8 /* CategoryIconPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358C52872F695DEC00A50AB8 /* CategoryIconPicker.swift */; };
 		35B7F1882F693CCD00513084 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B7F1872F693CCD00513084 /* EventDetailView.swift */; };
+		35B7F18A2F694AE100513084 /* EventCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B7F1892F694AE100513084 /* EventCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,8 +29,12 @@
 		355D12D02F6902EF00FF3641 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		355D12D22F6902EF00FF3641 /* PureDaysApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PureDaysApp.swift; path = PureDays/PureDaysApp.swift; sourceTree = "<group>"; };
 		355D12D72F69055100FF3641 /* DateUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DateUtils.swift; path = PureDays/DateUtils.swift; sourceTree = "<group>"; };
+		358C52852F695DEC00A50AB8 /* CategoryColorPicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CategoryColorPicker.swift; path = PureDays/CategoryColorPicker.swift; sourceTree = "<group>"; };
+		358C52862F695DEC00A50AB8 /* EmptyStateView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EmptyStateView.swift; path = PureDays/EmptyStateView.swift; sourceTree = "<group>"; };
+		358C52872F695DEC00A50AB8 /* CategoryIconPicker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CategoryIconPicker.swift; path = PureDays/CategoryIconPicker.swift; sourceTree = "<group>"; };
 		35A379422F68FA04004160D4 /* PureDays.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PureDays.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		35B7F1872F693CCD00513084 /* EventDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventDetailView.swift; path = PureDays/EventDetailView.swift; sourceTree = "<group>"; };
+		35B7F1892F694AE100513084 /* EventCard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = EventCard.swift; path = PureDays/EventCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +76,10 @@
 		35A379442F68FA04004160D4 /* PureDays */ = {
 			isa = PBXGroup;
 			children = (
+				358C52852F695DEC00A50AB8 /* CategoryColorPicker.swift */,
+				358C52872F695DEC00A50AB8 /* CategoryIconPicker.swift */,
+				358C52862F695DEC00A50AB8 /* EmptyStateView.swift */,
+				35B7F1892F694AE100513084 /* EventCard.swift */,
 				35B7F1872F693CCD00513084 /* EventDetailView.swift */,
 				355D12D72F69055100FF3641 /* DateUtils.swift */,
 				355D12CA2F69025A00FF3641 /* AddEventView.swift */,
@@ -151,12 +163,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				358C528A2F695DEC00A50AB8 /* CategoryIconPicker.swift in Sources */,
+				358C52892F695DEC00A50AB8 /* EmptyStateView.swift in Sources */,
 				355D12CD2F69025A00FF3641 /* Event.swift in Sources */,
 				355D12D32F6902EF00FF3641 /* ContentView.swift in Sources */,
+				35B7F18A2F694AE100513084 /* EventCard.swift in Sources */,
 				35B7F1882F693CCD00513084 /* EventDetailView.swift in Sources */,
 				355D12D82F69055100FF3641 /* DateUtils.swift in Sources */,
 				355D12D62F6902EF00FF3641 /* PureDaysApp.swift in Sources */,
 				355D12CC2F69025A00FF3641 /* AddEventView.swift in Sources */,
+				358C52882F695DEC00A50AB8 /* CategoryColorPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
